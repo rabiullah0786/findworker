@@ -125,7 +125,6 @@ export default function Navbar() {
                     <Link onClick={() => setOpen(false)} href="/about" className="menu-item">About</Link>
                     <Link onClick={() => setOpen(false)} href="/contact" className="menu-item">Contact</Link>
 
-                    <hr className="my-2" />
 
                     {/* LANGUAGE SECTION */}
                     <div className="mt-1">
@@ -168,7 +167,6 @@ export default function Navbar() {
                     </div>
 
 
-                    <hr className="my-2" />
 
                     {/* OTHER SETTINGS */}
                     <Link onClick={() => setOpen(false)} href="/privacy-policy" className="menu-item">
