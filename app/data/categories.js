@@ -5,7 +5,7 @@ export const categories = [
     { name: "Painter", image: "https://media.istockphoto.com/id/1198703852/photo/painter-man-at-work.jpg?s=612x612&w=0&k=20&c=C_QRUjPe2qdqrjpRL2wcWS3ajGmBVB5qVgIXSRsYjgg=" },
     { name: "Motor Machanic", image: "https://t4.ftcdn.net/jpg/01/62/60/41/360_F_162604147_CTKTtJiL69pTFt9LXHRYz5SkiaDVbB6d.jpg" },
     { name: "Ac Machanic", image: "https://t3.ftcdn.net/jpg/17/67/11/62/240_F_1767116279_apPuUYnpKiRuhYqVyQLbDxXjMUKaDJ5F.webp" },
-    { name: "Ac Machanic", image: "https://t3.ftcdn.net/jpg/17/67/11/62/240_F_1767116279_apPuUYnpKiRuhYqVyQLbDxXjMUKaDJ5F.webp" }
+    { name: "Aluminium ", image: "https://www.jaipuraluminiumworks.com/service-image/aluminium-door-fabrication-work-in-jaipur.jpg" }
 
 
 ];

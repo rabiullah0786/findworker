@@ -2,15 +2,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 import Navbar from "./components/Navbar";
 import { categories } from "./data/categories";
 import { indiaData } from "./data/locations";
+import { getStates, getDistricts, getCities } from "@/lib/locationHelpers";
 import { randomWorkers } from "./data/workers";
 
 
 
 export default function Home() {
+  const { t, language } = useLanguage();
+
+  const [worker, setWorker] = useState({
+    name: "",
+    age: "",
+    skill: "",
+    state: "",
+    district: "",
+    city: "",
+    whatsapp: "",
+    photo: null,
+  });
+
+  const [formData, setFormData] = useState({
+    state: "",
+    district: "",
+    city: "",
+  });
+
+  const statesList = getStates(language);
+  const workerDistricts = getDistricts(worker.state, language);
+  const workerCities = getCities(worker.state, worker.district);
+  const findDistricts = getDistricts(formData.state, language);
+  const findCities = getCities(formData.state, formData.district);
   const [isAccountCreated, setIsAccountCreated] = useState(false);
+
   const [editingProfile, setEditingProfile] = useState(false);
   const [showWorkers, setShowWorkers] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -62,24 +89,6 @@ export default function Home() {
       });
     }
   }, [dob]);
-
-
-  const [worker, setWorker] = useState({
-    name: "",
-    age: "",
-    skill: "",
-    state: "",
-    district: "",
-    city: "",
-    whatsapp: "",
-    photo: null,
-  });
-
-  const [formData, setFormData] = useState({
-    state: "",
-    district: "",
-    city: "",
-  });
 
   const [otpRequestId, setOtpRequestId] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -260,7 +269,6 @@ export default function Home() {
   };
 
 
-
   const handleLogout = () => {
     setIsAccountCreated(false); setIsLoggedIn(false);
     setWorker({ name: "", age: "", skill: "", district: "", city: "", whatsapp: "", photo: null, });
@@ -298,8 +306,8 @@ export default function Home() {
         {showCreateForm && !isAccountCreated && !editingProfile && (
           <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center py-6  m-10">
             <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
-              <h2 className="text-lg font-semibold mb-3">Create Worker Account</h2>
-              <input type="text" placeholder="Full Name" className="w-full border p-2 mb-2"
+              <h2 className="text-lg font-semibold mb-3">{t("createWorker")}</h2>
+              <input type="text" placeholder={t("name")} className="w-full border p-2 mb-2"
                 onChange={(e) => setWorker({ ...worker, name: e.target.value })} />
               <div className="flex gap-2">
                 {/* Day */}
@@ -363,7 +371,7 @@ export default function Home() {
                   setWorker({ ...worker, skill: e.target.value });
                 }}
               >
-                <option value="">Select Category</option>
+                <option value="">{t("selectCategory")}</option>
                 {categories.map((cat, i) => (
                   <option key={i} value={cat.name}>
                     {cat.name}
@@ -377,9 +385,9 @@ export default function Home() {
                 value={worker.state}
                 onChange={(e) => setWorker({ ...worker, state: e.target.value })}
               >
-                <option value="">Select State</option>
-                {Object.keys(indiaData).map((state) => (
-                  <option key={state} value={state}>{state}</option>
+                <option value="">{t("select State")}</option>
+                {statesList.map((s) => (
+                  <option key={s.key} value={s.key}>{s.label}</option>
                 ))}
               </select>
 
@@ -388,10 +396,10 @@ export default function Home() {
                 value={worker.district}
                 onChange={(e) => setWorker({ ...worker, district: e.target.value })}
               >
-                <option value="">Select District</option>
+                <option value="">{t("select District")}</option>
                 {worker.state &&
-                  Object.keys(indiaData[worker.state].districts).map((d) => (
-                    <option key={d} value={d}>{d}</option>
+                  workerDistricts.map((d) => (
+                    <option key={d.key} value={d.key}>{d.label}</option>
                   ))}
               </select>
 
@@ -400,10 +408,10 @@ export default function Home() {
                 value={worker.city}
                 onChange={(e) => setWorker({ ...worker, city: e.target.value })}
               >
-                <option value="">Select City</option>
+                <option value="">{t("select City")}</option>
                 {worker.state &&
                   worker.district &&
-                  indiaData[worker.state].districts[worker.district].map((c) => (
+                  workerCities.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
               </select>
@@ -411,7 +419,7 @@ export default function Home() {
 
               <input
                 type="tel"
-                placeholder="WhatsApp Number"
+                placeholder={t("phoneNumber")}
                 className="w-full border p-2 mb-2"
                 value={worker.whatsapp}
                 onChange={(e) => {
@@ -458,8 +466,8 @@ export default function Home() {
                 <label className="block mb-1 font-medium">Profile Photo</label>
                 <input type="file" accept="image/*" onChange={handlePhotoChange} />
               </div>
-              <button onClick={handleSubmit} className="w-full bg-green-600 text-white py-2 rounded">Create Account</button>
-              <button onClick={() => setShowCreateForm(false)} className="mt-2 w-full bg-gray-300 text-black py-2 rounded">Cancel</button>
+              <button onClick={handleSubmit} className="w-full bg-green-600 text-white py-2 rounded">{t("submit")}</button>
+              <button onClick={() => setShowCreateForm(false)} className="mt-2 w-full bg-gray-300 text-black py-2 rounded">{t("cancel")}</button>
             </div>
           </div>
         )}
@@ -468,7 +476,7 @@ export default function Home() {
         <div className="text-center space-y-2">
           {/* TEXT */}
           <div className="text-3xl md:text-4xl font-extrabold text-gray-800">
-            Find Skilled Workers
+            {t("findWorker")}
           </div>
 
           <div className="text-2xl md:text-4xl font-extrabold text-blue-600">
@@ -496,7 +504,7 @@ export default function Home() {
               transition
             "
             >
-              Find Workers
+              {t("findWorker")}
             </button>
 
             {/* CREATE ACCOUNT BUTTON (RIGHT SIDE) */}
@@ -517,7 +525,7 @@ export default function Home() {
       transition
     "
             >
-              Create Account
+              {t("createWorker")}
             </button>
           </div>
 
@@ -530,7 +538,7 @@ export default function Home() {
           {/* TITLE + VIEW ALL */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-800">
-              Categories
+              {t("categories")}
             </h2>
 
             {categories.length > 6 && (
@@ -583,7 +591,7 @@ export default function Home() {
           <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center">
             <div className="bg-white w-full h-[92vh] sm:h-auto sm:max-w-md rounded-t-2xl sm:rounded-xl p-5 overflow-y-auto animate-slideUp">
               <div className="flex justify-between items-center mb-4">
-                <h1 className="font-bold text-lg">Find {selectedCategory} Workers</h1>
+                <h1 className="font-bold text-lg">{t("findWorker")} {selectedCategory}</h1>
                 <button onClick={() => setShowFindForm(false)} className="text-2xl font-bold text-gray-600">✕</button>
               </div>
 
@@ -592,7 +600,7 @@ export default function Home() {
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
-                <option value="">Select Category</option>
+                <option value="">{t("selectCategory")}</option>
                 {categories.map((cat, i) => (
                   <option key={i} value={cat.name}>
                     {cat.name}
@@ -608,9 +616,9 @@ export default function Home() {
                   setFormData({ state: e.target.value, district: "", city: "" })
                 }
               >
-                <option value="">Select State</option>
-                {Object.keys(indiaData).map((state) => (
-                  <option key={state} value={state}>{state}</option>
+                <option value="">{t("select State")}</option>
+                {statesList.map((s) => (
+                  <option key={s.key} value={s.key}>{s.label}</option>
                 ))}
               </select>
 
@@ -621,10 +629,10 @@ export default function Home() {
                   setFormData({ ...formData, district: e.target.value, city: "" })
                 }
               >
-                <option value="">Select District</option>
+                <option value="">{t("select District")}</option>
                 {formData.state &&
-                  Object.keys(indiaData[formData.state].districts).map((d) => (
-                    <option key={d} value={d}>{d}</option>
+                  findDistricts.map((d) => (
+                    <option key={d.key} value={d.key}>{d.label}</option>
                   ))}
               </select>
 
@@ -635,15 +643,15 @@ export default function Home() {
                   setFormData({ ...formData, city: e.target.value })
                 }
               >
-                <option value="">Select City</option>
+                <option value="">{t("select City")}</option>
                 {formData.state &&
                   formData.district &&
-                  indiaData[formData.state].districts[formData.district].map((c) => (
+                  findCities.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
               </select>
 
-              <button onClick={handleAdd} className="w-full bg-blue-600 text-white p-3 rounded font-semibold">Find Workers</button>
+              <button onClick={handleAdd} className="w-full bg-blue-600 text-white p-3 rounded font-semibold">{t("findWorker")}</button>
             </div>
           </div>
         )}
@@ -689,7 +697,7 @@ export default function Home() {
               </div>
             ) : (
               <p className="text-center text-red-500 mt-4">
-                Not avialable workers
+                {t("noResults")}
               </p>
             )}
           </div>
@@ -713,30 +721,30 @@ export default function Home() {
             {showWorkerDetails && !editingProfile && (
               <div className="bg-white shadow-lg p-3 rounded mt-2 w-72">
                 <h3 className="font-bold mb-1">{worker.name}</h3>
-                <p><b>Age:</b> {worker.age}</p>
-                <p><b>Skill:</b> {worker.skill}</p>
-                <p><b>City:</b> {worker.city}</p>
-                <p><b>WhatsApp:</b> {worker.whatsapp}</p>
+                <p><b>{t("age")}:</b> {worker.age}</p>
+                <p><b>{t("skill")}:</b> {worker.skill}</p>
+                <p><b>{t("city")}:</b> {worker.city}</p>
+                <p><b>{t("whatsAppNumber")}:</b> {worker.whatsapp}</p>
                 <div className="flex justify-between mt-2">
-                  <button onClick={() => { setEditingProfile(true); setShowWorkerDetails(false); }} className="bg-yellow-400 px-3 py-1 rounded text-sm">Edit Profile</button>
-                  <button onClick={handleLogout} className="bg-red-500 px-3 py-1 rounded text-sm text-white">Logout</button>
+                  <button onClick={() => { setEditingProfile(true); setShowWorkerDetails(false); }} className="bg-yellow-400 px-3 py-1 rounded text-sm">{t("editProfile")}</button>
+                  <button onClick={handleLogout} className="bg-red-500 px-3 py-1 rounded text-sm text-white">{t("logout")}</button>
                 </div>
               </div>
             )}
             {editingProfile && (
               <div className="bg-white shadow-lg p-4 rounded mt-2 w-72">
-                <h3 className="font-bold mb-2">Edit Profile</h3>
-                <input type="text" placeholder="Full Name" className="w-full border p-2 mb-2" value={worker.name} onChange={(e) => setWorker({ ...worker, name: e.target.value })} />
-                <input type="number" placeholder="Age" className="w-full border p-2 mb-2" value={worker.age} onChange={(e) => setWorker({ ...worker, age: e.target.value })} />
-                <input type="text" placeholder="Skill" className="w-full border p-2 mb-2" value={worker.skill} onChange={(e) => setWorker({ ...worker, skill: e.target.value })} />
-                <input type="text" placeholder="District" className="w-full border p-2 mb-2" value={worker.district} onChange={(e) => setWorker({ ...worker, district: e.target.value })} />
-                <input type="text" placeholder="City" className="w-full border p-2 mb-2" value={worker.city} onChange={(e) => setWorker({ ...worker, city: e.target.value })} />
-                <input type="text" placeholder="WhatsApp Number" className="w-full border p-2 mb-2" value={worker.whatsapp} onChange={(e) => setWorker({ ...worker, whatsapp: e.target.value })} />
+                <h3 className="font-bold mb-2">{t("editProfile")}</h3>
+                <input type="text" placeholder={t("name")} className="w-full border p-2 mb-2" value={worker.name} onChange={(e) => setWorker({ ...worker, name: e.target.value })} />
+                <input type="number" placeholder={t("age")} className="w-full border p-2 mb-2" value={worker.age} onChange={(e) => setWorker({ ...worker, age: e.target.value })} />
+                <input type="text" placeholder={t("skill")} className="w-full border p-2 mb-2" value={worker.skill} onChange={(e) => setWorker({ ...worker, skill: e.target.value })} />
+                <input type="text" placeholder={t("district")} className="w-full border p-2 mb-2" value={worker.district} onChange={(e) => setWorker({ ...worker, district: e.target.value })} />
+                <input type="text" placeholder={t("city")} className="w-full border p-2 mb-2" value={worker.city} onChange={(e) => setWorker({ ...worker, city: e.target.value })} />
+                <input type="text" placeholder={t("whatsAppNumber")} className="w-full border p-2 mb-2" value={worker.whatsapp} onChange={(e) => setWorker({ ...worker, whatsapp: e.target.value })} />
                 <div className="mb-3">
-                  <label className="block mb-1 font-medium">Profile Photo</label>
+                  <label className="block mb-1 font-medium">{t("profilePhoto")}</label>
                   <input type="file" accept="image/*" onChange={handlePhotoChange} />
                 </div>
-                <button onClick={() => setEditingProfile(false)} className="w-full bg-green-600 text-white py-2 rounded">Save Changes</button>
+                <button onClick={() => setEditingProfile(false)} className="w-full bg-green-600 text-white py-2 rounded">{t("saveChanges")}</button>
               </div>
             )}
           </div>

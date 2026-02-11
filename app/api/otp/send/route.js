@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { db } from "@/lib/firebase-admin";
 import crypto from "crypto";
-import twilio from "twilio";
 
 export const runtime = "nodejs";
 
-const OTP_TTL_MINUTES = 5;
+const OTP_TTL_MINUTES = 10;
 const MAX_ACCOUNTS_PER_PHONE = 3;
 
 function normalizePhone(input) {
@@ -16,63 +15,69 @@ function normalizePhone(input) {
   return null;
 }
 
-function hashOtp(otp, requestId) {
-  return crypto.createHash("sha256").update(`${otp}:${requestId}`).digest("hex");
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function generateRequestId() {
+  return crypto.randomBytes(12).toString("hex");
 }
 
 export async function POST(req) {
   try {
     const { phone } = await req.json();
     const normalized = normalizePhone(phone);
-    if (!normalized) {
-      return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
-    }
 
-    const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER } = process.env;
-    if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
+    if (!normalized) {
       return NextResponse.json(
-        { error: "SMS service is not configured" },
-        { status: 500 }
+        { error: "Invalid phone number" },
+        { status: 400 }
       );
     }
 
-    const db = await getDb();
-    const workersCount = await db
+    // Check if phone already has too many accounts
+    const workersSnapshot = await db
       .collection("workers")
-      .countDocuments({ whatsapp: normalized });
-    if (workersCount >= MAX_ACCOUNTS_PER_PHONE) {
+      .where("whatsapp", "==", normalized)
+      .get();
+
+    if (workersSnapshot.size >= MAX_ACCOUNTS_PER_PHONE) {
       return NextResponse.json(
         { error: "This number already has 3 accounts" },
         { status: 403 }
       );
     }
 
-    const requestId = crypto.randomBytes(12).toString("hex");
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-    const otpHash = hashOtp(otp, requestId);
+    // Generate OTP and request ID
+    const otp = generateOTP();
+    const requestId = generateRequestId();
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 
-    await db.collection("otp_requests").insertOne({
+    // Store OTP in Firestore
+    await db.collection("otp_requests").doc(requestId).set({
       phone: normalized,
-      otpHash,
-      requestId,
-      expiresAt,
+      otp,
       verified: false,
       attempts: 0,
       createdAt: new Date(),
+      expiresAt,
     });
 
-    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+    // Log OTP for development (remove in production)
+    console.log(`✅ OTP for ${normalized}: ${otp} (Request ID: ${requestId})`);
 
-    await client.messages.create({
-      from: TWILIO_FROM_NUMBER,
-      to: normalized,
-      body: `Your FindWorker OTP is ${otp}. It expires in ${OTP_TTL_MINUTES} minutes.`,
+    return NextResponse.json({
+      ok: true,
+      requestId,
+      message: "OTP sent successfully",
+      // For development only - remove in production
+      ...(process.env.NODE_ENV === "development" && { otp }),
     });
-
-    return NextResponse.json({ requestId });
   } catch (err) {
-    console.error("OTP send failed:", err);
-    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 });
+    console.error("OTP Send Error:", err);
+    return NextResponse.json(
+      { error: "Failed to send OTP" },
+      { status: 500 }
+    );
   }
 }
