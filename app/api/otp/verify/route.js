@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase-admin";
+import { getDb } from "@/lib/mongodb";
 
 export const runtime = "nodejs";
 
@@ -16,20 +16,19 @@ export async function POST(req) {
       );
     }
 
-    // Get OTP record from Firestore
-    const otpDoc = await db
-      .collection("otp_requests")
-      .doc(requestId)
-      .get();
+    const db = await getDb();
 
-    if (!otpDoc.exists) {
+    // Get OTP record from MongoDB
+    const record = await db
+      .collection("otp_requests")
+      .findOne({ requestId });
+
+    if (!record) {
       return NextResponse.json(
         { error: "OTP not found" },
         { status: 404 }
       );
     }
-
-    const record = otpDoc.data();
 
     // Check if already verified
     if (record.verified) {
@@ -41,7 +40,7 @@ export async function POST(req) {
     }
 
     // Check if OTP expired
-    if (record.expiresAt.toDate() < new Date()) {
+    if (record.expiresAt < new Date()) {
       return NextResponse.json(
         { error: "OTP expired" },
         { status: 410 }
@@ -59,9 +58,10 @@ export async function POST(req) {
     // Verify OTP
     if (String(record.otp) !== String(otp)) {
       // Increment attempts
-      await db.collection("otp_requests").doc(requestId).update({
-        attempts: record.attempts + 1,
-      });
+      await db.collection("otp_requests").updateOne(
+        { requestId },
+        { $set: { attempts: record.attempts + 1 } }
+      );
 
       return NextResponse.json(
         { error: "Invalid OTP" },
@@ -70,10 +70,10 @@ export async function POST(req) {
     }
 
     // Mark as verified
-    await db.collection("otp_requests").doc(requestId).update({
-      verified: true,
-      verifiedAt: new Date(),
-    });
+    await db.collection("otp_requests").updateOne(
+      { requestId },
+      { $set: { verified: true, verifiedAt: new Date() } }
+    );
 
     return NextResponse.json({
       ok: true,
