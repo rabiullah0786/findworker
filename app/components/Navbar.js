@@ -52,9 +52,7 @@ export default function Navbar() {
                     {t("about")}
                 </Link>
 
-                <Link href="/contact" className="hover:text-blue-600 text-sm">
-                    {t("contact")}
-                </Link>
+
 
                 {/* Language Dropdown */}
                 <div className="relative">
@@ -91,9 +89,6 @@ export default function Navbar() {
                     </Link>
                     <Link href="/about" className="py-2 px-2 rounded hover:bg-blue-50 cursor-pointer text-sm">
                         {t("about")}
-                    </Link>
-                    <Link href="/contact" className="py-2 px-2 rounded hover:bg-blue-50 cursor-pointer text-sm">
-                        {t("contact")}
                     </Link>
                     <hr className="my-2" />
 

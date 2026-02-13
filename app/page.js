@@ -304,8 +304,8 @@ export default function Home() {
 
         {/* CREATE FORM */}
         {showCreateForm && !isAccountCreated && !editingProfile && (
-          <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center py-6  m-10">
-            <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+          <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center">
+            <div className="bg-white w-full h-[92vh] sm:h-auto sm:max-w-md rounded-t-2xl sm:rounded-xl p-6 overflow-y-auto shadow-md">
               <h2 className="text-lg font-semibold mb-3">{t("createWorker")}</h2>
               <input type="text" placeholder={t("name")} className="w-full border p-2 mb-2"
                 onChange={(e) => setWorker({ ...worker, name: e.target.value })} />
@@ -431,7 +431,7 @@ export default function Home() {
                 }}
               />
 
-              <div className="flex gap-2 mb-2">
+              <div className="flex flex-col sm:flex-row gap-2 mb-2">
                 <button
                   type="button"
                   onClick={handleSendOtp}
