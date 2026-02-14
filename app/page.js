@@ -552,33 +552,29 @@ export default function Home() {
           </div>
 
           {/* CATEGORY GRID */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-            {(showAllCategories ? categories : categories.slice(0, 6)).map(
-              (cat, index) => (
-                <div
-                  key={index}
-                  onClick={() => {
-                    setSelectedCategory(cat.name);
-                    setShowFindForm(true);
-                    setShowCreateForm(false);
-                  }}
-                  className="text-center cursor-pointer"
-                >
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-0.5 sm:gap-1">
+            {(showAllCategories ? categories : categories.slice(0, 6)).map((cat, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setSelectedCategory(cat.name);
+                  setShowFindForm(true);
+                  setShowCreateForm(false);
+                }}
+                className="flex flex-col items-center justify-start gap-1 p-0.5 cursor-pointer bg-white rounded-md shadow-sm hover:shadow-md transition"
+                aria-label={`Category ${cat.name}`}
+              ><div className="w-40 h-40 sm:w-48 sm:h-56 md:w-56 md:h-56 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
                   <img
                     src={cat.image}
                     alt={cat.name}
-                    className="mx-auto object-cover rounded-xl
-              w-28 h-28
-              sm:w-32 sm:h-32
-              md:w-80 md:h-80
-              transition-transform duration-300 hover:scale-105"
+                    className="object-cover w-full h-full"
                   />
-                  <p className="mt-2 font-semibold text-gray-800">
-                    {cat.name}
-                  </p>
                 </div>
-              )
-            )}
+
+
+                <p className="mt-1 text-sm font-semibold text-gray-800 truncate">{cat.name}</p>
+              </button>
+            ))}
           </div>
         </div>
 

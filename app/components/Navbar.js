@@ -96,9 +96,10 @@ export default function Navbar() {
                     <div className="py-2">
                         <button
                             onClick={() => setShowLanguages(!showLanguages)}
-                            className="w-full text-left px-2 py-2 rounded hover:bg-blue-50 transition font-semibold text-sm flex justify-between items-center"
+                            className="w-full text-left px-2 py-2 rounded hover:bg-blue-50 transition  text-sm flex justify-between items-center"
                         >
-                            <span>{currentLanguage?.flag} {currentLanguage?.name}</span>
+                            {/* <span>{currentLanguage?.flag} {currentLanguage?.name}</span> */}
+                            <span>🌐  Language</span>
                             <span className={`text-xs transition ${showLanguages ? "rotate-180" : ""}`}>▼</span>
                         </button>
                         {showLanguages && (
