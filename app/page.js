@@ -45,6 +45,10 @@ export default function Home() {
   const [workersList, setWorkersList] = useState([]);
   const [filteredWorkers, setFilteredWorkers] = useState([]);
 
+  // Selected worker modal
+  const [selectedResultWorker, setSelectedResultWorker] = useState(null);
+  const [showResultModal, setShowResultModal] = useState(false);
+
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showFindForm, setShowFindForm] = useState(false);
   const [showWorkerDetails, setShowWorkerDetails] = useState(false);
@@ -475,11 +479,11 @@ export default function Home() {
 
         <div className="text-center space-y-2">
           {/* TEXT */}
-          <div className="text-3xl md:text-4xl font-extrabold text-gray-800">
-            {t("findWorker")}
+          <div className="text-3xl md:text-2xl font-extrabold text-gray-800">
+            {t("Find Skilled Worker")}
           </div>
 
-          <div className="text-2xl md:text-4xl font-extrabold text-blue-600">
+          <div className="text-2xl md:text-2xl font-extrabold text-blue-600">
             In Your Area
           </div>
 
@@ -660,31 +664,34 @@ export default function Home() {
                 {filteredWorkers.map((w, index) => (
                   <div
                     key={index}
-                    className="border p-4 mx-4 rounded-xl shadow bg-white"
+                    className="border p-3 rounded-xl shadow bg-white flex flex-col gap-3"
                   >
-                    {/* TOP ROW: IMAGE + NAME */}
-                    <div className="flex items-center gap-2">
-                      {/* LEFT: LOGO */}
-                      <img
-                        src={w.photo}
-                        className="w-16 h-16 rounded-full object-cover"
-                        alt="profile"
-                      />
-                      {/* RIGHT: NAME + RATING */}
-                      <div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          setSelectedResultWorker(w);
+                          setShowResultModal(true);
+                        }}
+                        className="shrink-0 rounded-full overflow-hidden w-16 h-16 md:w-20 md:h-20"
+                      >
+                        {w.photo ? (
+                          <img src={w.photo} alt={w.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">No Image</div>
+                        )}
+                      </button>
+
+                      <div className="flex-1">
                         <h3 className="font-bold text-lg">{w.name}</h3>
+                        <p className="text-sm mt-1">{w.skill}</p>
+                        <p className="text-sm">📍 {w.city}, {w.district}</p>
                       </div>
                     </div>
 
-                    {/* DETAILS */}
-                    <p className="mt-2 text-sm">{w.skill}</p>
-                    <p className="text-sm">📍 {w.city}, {w.district}</p>
-
-                    {/* WHATSAPP BUTTON */}
                     <a
                       href={`https://wa.me/${(w.whatsapp || "").replace(/\D/g, "")}`}
                       target="_blank"
-                      className="block mt-3 bg-green-500 text-white text-center py-2 rounded-lg"
+                      className="block mt-1 bg-green-500 text-white text-center py-2 rounded-lg"
                     >
                       WhatsApp
                     </a>
@@ -696,6 +703,42 @@ export default function Home() {
                 {t("noResults")}
               </p>
             )}
+          </div>
+        )}
+
+        {/* Worker details modal (full photo + info) */}
+        {showResultModal && selectedResultWorker && (
+          <div className="fixed inset-0 z-60 bg-black/70 flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-xl rounded-lg overflow-y-auto shadow-lg p-4">
+              <div className="flex justify-between items-start">
+                <h3 className="font-bold text-lg">{selectedResultWorker.name}</h3>
+                <button onClick={() => setShowResultModal(false)} className="text-xl font-bold">✕</button>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="w-full flex items-center justify-center">
+                  {selectedResultWorker.photo ? (
+                    <img src={selectedResultWorker.photo} alt={selectedResultWorker.name} className="w-full max-h-[60vh] object-contain rounded" />
+                  ) : (
+                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center">No Image</div>
+                  )}
+                </div>
+
+                <div>
+                  <p className="mb-2"><b>Skill:</b> {selectedResultWorker.skill}</p>
+                  <p className="mb-2"><b>Age:</b> {selectedResultWorker.age || "-"}</p>
+                  <p className="mb-2"><b>State:</b> {selectedResultWorker.state || "-"}</p>
+                  <p className="mb-2"><b>District:</b> {selectedResultWorker.district || "-"}</p>
+                  <p className="mb-2"><b>City:</b> {selectedResultWorker.city || "-"}</p>
+                  <p className="mb-2"><b>WhatsApp:</b> {selectedResultWorker.whatsapp || "-"}</p>
+
+                  <div className="mt-4 flex gap-2">
+                    <a href={`https://wa.me/${(selectedResultWorker.whatsapp || "").replace(/\D/g, "")}`} target="_blank" className="flex-1 bg-green-500 text-white py-2 rounded text-center">WhatsApp</a>
+                    <button onClick={() => setShowResultModal(false)} className="flex-1 bg-gray-300 py-2 rounded">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
