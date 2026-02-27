@@ -126,8 +126,8 @@ export default function Navbar() {
                     <Link href="/settings" className="py-2 px-2 rounded hover:bg-blue-50 cursor-pointer text-sm">
                         ⚙️ {t("settings")}
                     </Link>
-                    <Link href="/privacy-policy" className="py-2 px-2 rounded hover:bg-blue-50 cursor-pointer text-sm">
-                        📋 {t("privacyPolicy")}
+                    <Link href="/privacy" className="py-2 px-2 rounded hover:bg-blue-50 cursor-pointer text-sm">
+                        📋 {t("privacy-policy")}
                     </Link>
                 </div>
             )}

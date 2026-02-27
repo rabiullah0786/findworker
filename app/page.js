@@ -11,6 +11,7 @@ import { randomWorkers } from "./data/workers";
 
 
 
+
 export default function Home() {
   const { t, language } = useLanguage();
 
@@ -94,147 +95,37 @@ export default function Home() {
     }
   }, [dob]);
 
-  const [otpRequestId, setOtpRequestId] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpStatus, setOtpStatus] = useState("");
-  const [isOtpVerified, setIsOtpVerified] = useState(false);
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
-  const normalizePhone = (input) => {
-    const digits = (input || "").replace(/\D/g, "");
-    if (digits.length === 10) return `+91${digits}`;
-    if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
-    if (digits.startsWith("+") && digits.length >= 12) return input;
-    return null;
-  };
+
+
 
   // ---------------- RANDOM WORKERS ----------------
-
-
   // ---------------- CREATE ACCOUNT ----------------
   const handleSubmit = async () => {
     if (!worker.name || !selectedCategory || !worker.state || !worker.district || !worker.city) {
       alert("Please fill all fields");
       return;
     }
-    if (!worker.whatsapp) {
-      alert("Please enter WhatsApp number");
-      return;
-    }
-    if (!isOtpVerified || !otpRequestId) {
-      alert("Please verify OTP first");
-      return;
-    }
-
-    const normalizedPhone = normalizePhone(worker.whatsapp);
-    if (!normalizedPhone) {
-      alert("Invalid phone number");
-      return;
-    }
 
     const newWorker = {
       ...worker,
       skill: selectedCategory,
-      state: worker.state,
-      district: worker.district,
-      city: worker.city,
-      whatsapp: normalizedPhone,
     };
 
     const res = await fetch("/api/workers/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ worker: newWorker, requestId: otpRequestId }),
+      body: JSON.stringify({ worker: newWorker }),
     });
 
-    const data = await res.json();
     if (!res.ok) {
-      alert(data?.error || "Failed to create account");
+      alert("Failed to create account");
       return;
     }
 
-    const updatedWorkers = [...workersList, newWorker];
-
-    // ✅ Save locally
-    setWorkersList(updatedWorkers);
-    localStorage.setItem("workersList", JSON.stringify(updatedWorkers));
-
-    // ✅ Set current user
-    setWorker(newWorker);
-    localStorage.setItem("currentWorker", JSON.stringify(newWorker));
-
-    setIsLoggedIn(true);
-    setIsAccountCreated(true);
-    setShowCreateForm(false);
+    alert("Account Created Successfully ✅");
   };
 
-  const handleSendOtp = async () => {
-    const normalizedPhone = normalizePhone(worker.whatsapp);
-    if (!normalizedPhone) {
-      alert("Invalid phone number");
-      return;
-    }
-
-    setIsSendingOtp(true);
-    setOtpStatus("");
-    setIsOtpVerified(false);
-    setOtpRequestId("");
-
-    const res = await fetch("/api/otp/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: normalizedPhone }),
-    });
-
-    const data = await res.json();
-    setIsSendingOtp(false);
-
-    if (!res.ok) {
-      setOtpStatus(data?.error || "Failed to send OTP");
-      return;
-    }
-
-    setOtpRequestId(data.requestId);
-    setOtpStatus("OTP sent successfully");
-  };
-
-  const handleVerifyOtp = async () => {
-    const normalizedPhone = normalizePhone(worker.whatsapp);
-    if (!normalizedPhone) {
-      alert("Invalid phone number");
-      return;
-    }
-    if (!otpCode || !otpRequestId) {
-      alert("Please enter OTP");
-      return;
-    }
-
-    setIsVerifyingOtp(true);
-    setOtpStatus("");
-
-    const res = await fetch("/api/otp/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        phone: normalizedPhone,
-        otp: otpCode,
-        requestId: otpRequestId,
-      }),
-    });
-
-    const data = await res.json();
-    setIsVerifyingOtp(false);
-
-    if (!res.ok) {
-      setOtpStatus(data?.error || "OTP verification failed");
-      setIsOtpVerified(false);
-      return;
-    }
-
-    setIsOtpVerified(true);
-    setOtpStatus("OTP verified");
-  };
 
 
   const handlePhotoChange = (e) => {
@@ -245,56 +136,57 @@ export default function Home() {
   };
 
   // ---------------- FIND WORKERS ----------------
-  const handleAdd = () => {
+
+  const handleAdd = async () => {
     if (!selectedCategory || !formData.state || !formData.district || !formData.city) {
       alert("Please select all fields");
       return;
     }
 
-    const normalize = (str) => str?.toLowerCase().trim();
+    const res = await fetch("/api/workers/find", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        skill: selectedCategory,
+        state: formData.state,
+        district: formData.district,
+        city: formData.city,
+      }),
+    });
 
-    const createdMatches = workersList.filter((w) =>
-      normalize(w.skill) === normalize(selectedCategory) &&
-      normalize(w.state) === normalize(formData.state) &&
-      normalize(w.district) === normalize(formData.district) &&
-      normalize(w.city) === normalize(formData.city)
-    );
+    const data = await res.json();
 
-    const randomMatches = randomWorkers.filter((w) =>
-      normalize(w.skill) === normalize(selectedCategory) &&
-      normalize(w.state) === normalize(formData.state) &&
-      normalize(w.district) === normalize(formData.district) &&
-      normalize(w.city) === normalize(formData.city)
-    );
+    if (!res.ok) {
+      alert("Error fetching workers");
+      return;
+    }
 
-    setFilteredWorkers([...createdMatches, ...randomMatches]);
-    setShowWorkers(true);
+    if (data.length === 0) {
+      alert("Worker Not Found");
+    }
+
+    setFilteredWorkers(data);
+
+    // 👇 IMPORTANT
     setShowFindForm(false);
+    setShowWorkers(true);
+
+    // 👇 Scroll to results automatically
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
   };
-
-
   const handleLogout = () => {
     setIsAccountCreated(false); setIsLoggedIn(false);
     setWorker({ name: "", age: "", skill: "", district: "", city: "", whatsapp: "", photo: null, });
-    setOtpRequestId("");
-    setOtpCode("");
-    setOtpStatus("");
-    setIsOtpVerified(false);
+
   };
 
   // ---------------- LOCAL STORAGE ----------------
-  useEffect(() => {
-    const savedWorkers = JSON.parse(localStorage.getItem("workersList")) || [];
-    const savedUser = JSON.parse(localStorage.getItem("currentWorker"));
 
-    setWorkersList(savedWorkers);
-
-    if (savedUser) {
-      setWorker(savedUser);
-      setIsLoggedIn(true);
-      setIsAccountCreated(true);
-    }
-  }, []);
 
   // INDIA DATA (states/cities)
 
@@ -421,51 +313,10 @@ export default function Home() {
               </select>
 
 
-              <input
-                type="tel"
-                placeholder={t("phoneNumber")}
-                className="w-full border p-2 mb-2"
-                value={worker.whatsapp}
-                onChange={(e) => {
-                  setWorker({ ...worker, whatsapp: e.target.value });
-                  setOtpRequestId("");
-                  setOtpCode("");
-                  setOtpStatus("");
-                  setIsOtpVerified(false);
-                }}
-              />
+              <input type="text" placeholder="WhatsApp Number" className="w-full border p-2 mb-2"
+                onChange={(e) => setWorker({ ...worker, whatsapp: e.target.value })} />
 
-              <div className="flex flex-col sm:flex-row gap-2 mb-2">
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={isSendingOtp}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded disabled:opacity-60"
-                >
-                  {isSendingOtp ? "Sending..." : "Send OTP"}
-                </button>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Enter OTP"
-                  className="flex-1 border p-2 rounded"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={handleVerifyOtp}
-                  disabled={isVerifyingOtp}
-                  className="flex-1 bg-green-600 text-white py-2 rounded disabled:opacity-60"
-                >
-                  {isVerifyingOtp ? "Verifying..." : "Verify"}
-                </button>
-              </div>
-              {otpStatus && (
-                <p className={`text-sm mb-2 ${isOtpVerified ? "text-green-600" : "text-red-600"}`}>
-                  {otpStatus}
-                </p>
-              )}
+
               <div className="mb-3">
                 <label className="block mb-1 font-medium">Profile Photo</label>
                 <input type="file" accept="image/*" onChange={handlePhotoChange} />
