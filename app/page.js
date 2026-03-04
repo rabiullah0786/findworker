@@ -258,7 +258,6 @@ export default function Home() {
               )}
 
 
-
               <select
                 className="w-full border p-2 mb-2"
                 value={selectedCategory}
@@ -502,7 +501,7 @@ export default function Home() {
                   ))}
               </select>
 
-              <button onClick={handleAdd} className="w-full bg-blue-600 text-white p-3 rounded font-semibold">{t("findWorker")}</button>
+              <button onClick={handleAdd} className="w-full hover:bg-blue-500 bg-blue-600 text-white p-3 rounded font-semibold">{t("findWorker")}</button>
             </div>
           </div>
         )}
