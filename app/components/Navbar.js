@@ -58,9 +58,11 @@ export default function Navbar() {
                 <div className="relative">
                     <button
                         onClick={() => setShowLanguages(!showLanguages)}
-                        className="flex items-center gap-2 px-3 py-1 rounded hover:bg-blue-100 transition text-sm"
+                        className="w-full text-left px-2 py-2 rounded hover:bg-blue-50 transition  text-sm flex justify-between items-center"
                     >
-                        {currentLanguage?.flag} {currentLanguage?.name}
+                        {/* <span>{currentLanguage?.flag} {currentLanguage?.name}</span> */}
+                        <span>🌐  Language</span>
+                        <span className={`text-xs transition ${showLanguages ? "rotate-180" : ""}`}>▼</span>
                     </button>
                     {showLanguages && (
                         <div className="absolute top-full right-0 mt-1 bg-white shadow-lg rounded-lg p-2 z-50 min-w-[140px]">

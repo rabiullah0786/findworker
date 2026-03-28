@@ -8,7 +8,7 @@ import { categories } from "./data/categories";
 import { indiaData } from "./data/locations";
 import { getStates, getDistricts, getCities } from "@/lib/locationHelpers";
 import { randomWorkers } from "./data/workers";
-
+import { useRef } from "react";
 
 
 
@@ -31,6 +31,8 @@ export default function Home() {
     district: "",
     city: "",
   });
+
+
 
   const statesList = getStates(language);
   const workerDistricts = getDistricts(worker.state, language);
@@ -55,10 +57,21 @@ export default function Home() {
   const [showWorkerDetails, setShowWorkerDetails] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
 
-
   const [selectedCategory, setSelectedCategory] = useState("");
 
   const currentYear = new Date().getFullYear();
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("currentWorker");
+
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+
+      setWorker(parsedUser);
+      setIsAccountCreated(true);
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   const [dob, setDob] = useState({
     day: "",
@@ -95,12 +108,28 @@ export default function Home() {
     }
   }, [dob]);
 
+  const panelRef = useRef(null);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        setShowWorkerDetails(false);
+        setEditingProfile(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
 
 
   // ---------------- RANDOM WORKERS ----------------
   // ---------------- CREATE ACCOUNT ----------------
+
   const handleSubmit = async () => {
     if (!worker.name || !selectedCategory || !worker.state || !worker.district || !worker.city) {
       alert("Please fill all fields");
@@ -123,10 +152,18 @@ export default function Home() {
       return;
     }
 
+    // ✅ save in localStorage
+    localStorage.setItem("currentWorker", JSON.stringify(newWorker));
+
+    // ✅ state update
+    setWorker(newWorker);
+    setIsAccountCreated(true);
+    setIsLoggedIn(true);
+
+    setShowCreateForm(false);
+
     alert("Account Created Successfully ✅");
   };
-
-
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0]; if (file) {
@@ -179,6 +216,7 @@ export default function Home() {
       behavior: "smooth",
     });
   };
+
   const handleLogout = () => {
     setIsAccountCreated(false); setIsLoggedIn(false);
     setWorker({ name: "", age: "", skill: "", district: "", city: "", whatsapp: "", photo: null, });
@@ -597,7 +635,7 @@ export default function Home() {
         {/* LOGO PANEL */}
         {isAccountCreated && worker?.name && (
 
-          <div className="fixed bottom-4 left-2 z-50">
+          <div ref={panelRef} className="fixed bottom-4 left-2 z-50">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-600 cursor-pointer" onClick={() => setShowWorkerDetails(!showWorkerDetails)}>
               {worker.photo ? (
                 <img src={worker.photo} alt="Profile" className="w-full h-full object-cover" />
